@@ -4,88 +4,48 @@ function PomodoroTimer() {
   const [minutes, setMinutes] = useState(25);
   const [seconds, setSeconds] = useState(0);
   const [completed, setCompleted] = useState(0);
-  const [intervalId, setIntervalId] = useState(null);
-  const [timerAudio, setTimerAudio] = useState(null);
-  const [doneAudio, setDoneAudio] = useState(null);
+  const [isRunning, setIsRunning] = useState(false);
 
   useEffect(() => {
-    setTimerAudio(
-      new Audio(
-        "https://www.fesliyanstudios.com/soundeffects/2019-03-8/Original/Clock-Ticking-C-www.fesliyanstudios.com.mp3"
-      )
-    );
-    setDoneAudio(
-      new Audio(
-        "https://assets.mixkit.co/active_storage/sfx/992/992-preview.mp3"
-      )
-    );
-  }, []);
-
-  useEffect(() => {
-    if (timerAudio) {
-      timerAudio.loop = true;
-    }
-    return () => {
-      clearInterval(intervalId);
-      if (timerAudio) {
-        timerAudio.pause();
-      }
-      if (doneAudio) {
-        doneAudio.pause();
-      }
-    };
-  }, [timerAudio, doneAudio]);
-
-  function updateTimer() {
-    if (seconds === 0) {
-      if (minutes === 0) {
-        if (timerAudio && doneAudio) {
-          timerAudio.pause();
-          doneAudio.play();
+    if (isRunning) {
+      const intervalId = setInterval(() => {
+        if (seconds === 0) {
+          if (minutes === 0) {
+            clearInterval(intervalId);
+            handleSessionComplete();
+          } else {
+            setMinutes(minutes - 1);
+            setSeconds(59);
+          }
+        } else {
+          setSeconds(seconds - 1);
         }
-        clearInterval(intervalId);
-        alert("Session completed!");
-        setCompleted(completed + 1);
-        setMinutes(25);
-        setSeconds(0);
-        if (doneAudio) {
-          doneAudio.pause();
-          doneAudio.currentTime = 0;
-        }
-        if (timerAudio) {
-          timerAudio.currentTime = 0;
-        }
-      } else {
-        setMinutes(minutes - 1);
-        setSeconds(59);
-      }
-    } else {
-      setSeconds(seconds - 1);
-    }
-  }
+      }, 1000);
 
-  const startTimer = () => {
-    setIntervalId(setInterval(updateTimer, 1000));
-    if (timerAudio) {
-      timerAudio.play();
+      return () => clearInterval(intervalId);
     }
+  }, [isRunning, minutes, seconds]);
+
+  const handleStart = () => {
+    setIsRunning(true);
   };
 
-  const stopTimer = () => {
-    clearInterval(intervalId);
-    if (timerAudio) {
-      timerAudio.pause();
-      timerAudio.currentTime = 0;
-    }
+  const handleStop = () => {
+    setIsRunning(false);
   };
 
-  const resetTimer = () => {
-    clearInterval(intervalId);
+  const handleReset = () => {
+    setIsRunning(false);
     setMinutes(25);
     setSeconds(0);
-    if (timerAudio) {
-      timerAudio.pause();
-    }
+  };
+
+  const handleSessionComplete = () => {
+    setIsRunning(false);
+    setCompleted(completed + 1);
+    alert("Session completed!");
+    setMinutes(25);
+    setSeconds(0);
   };
 
   return (
@@ -99,13 +59,13 @@ function PomodoroTimer() {
           .toString()
           .padStart(2, "0")}`}</div>
         <div id="controls">
-          <button id="start" onClick={startTimer}>
+          <button id="start" onClick={handleStart}>
             <i className="fa-solid fa-play"></i> Start
           </button>
-          <button id="stop" onClick={stopTimer}>
+          <button id="stop" onClick={handleStop}>
             <i className="fa-regular fa-circle-stop"></i> Stop
           </button>
-          <button id="reset" onClick={resetTimer}>
+          <button id="reset" onClick={handleReset}>
             <i className="fa-solid fa-stopwatch"></i> Reset
           </button>
         </div>
